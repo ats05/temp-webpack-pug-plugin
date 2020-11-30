@@ -1,9 +1,11 @@
-.class-a
-  p.text ほげほげ
-  a(href="example.com")
-  include ./_parts.pug
-  stylekit.
-    html {
-      background-color: #fff;
-    }
+extends _layout.pug
+
+include _mixin.pug
+
+block content
+  .class-a
+    p.text ほげほげ
+    a(href="example.com")
+    include ./_parts.pug
+    +testMixin
     
