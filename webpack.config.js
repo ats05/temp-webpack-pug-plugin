@@ -4,6 +4,7 @@ const SOURCE_DIR = path.resolve(__dirname, 'src');
 const OUTPUT_DIR = path.resolve(__dirname, 'dist');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const PugStyleKitWebpackPlugin = require('./PugStyleKitWebpackPlugin');
 
 module.exports = {
   entry: SOURCE_DIR + '/entry.js',
@@ -30,5 +31,6 @@ module.exports = {
       template: SOURCE_DIR + '/index.pug',
       filename: OUTPUT_DIR + '/index.html'
     }),
+    new PugStyleKitWebpackPlugin(),
   ]
 };
