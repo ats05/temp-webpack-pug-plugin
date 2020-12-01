@@ -16,19 +16,19 @@ module.exports = {
     contentBase: OUTPUT_DIR,
     port: 8080
   },
-  module: {
-    rules: [
-      {
-        test: /\.pug$/,
-        use: {
-          loader: 'pug-loader',
-        }
-      }
-    ]
-  },
+  module: {},
   plugins: [
-    new PugStyleKitWebpackPlugin({
-      templateFile: SOURCE_DIR + '/index.pug',
-    }),
+    new PugStyleKitWebpackPlugin(
+      [
+        {
+          from: SOURCE_DIR + '/index.pug',
+          to: OUTPUT_DIR + '/index.html',
+        },
+        {
+          from: SOURCE_DIR + '/parse-test.pug',
+          to: OUTPUT_DIR + '/parse-test.html',
+        }
+      ]
+    ),
   ]
 };
