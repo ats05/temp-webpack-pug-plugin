@@ -27,10 +27,8 @@ module.exports = {
     ]
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: SOURCE_DIR + '/index.pug',
-      filename: OUTPUT_DIR + '/index.html'
+    new PugStyleKitWebpackPlugin({
+      templateFile: SOURCE_DIR + '/index.pug',
     }),
-    new PugStyleKitWebpackPlugin(),
   ]
 };
