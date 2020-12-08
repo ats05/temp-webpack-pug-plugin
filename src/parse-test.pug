@@ -6,10 +6,17 @@ block content
   .class-a
     p.text ほげほげ
     a(href="example.com")
+    //-
+      ほげほげ
     include ./_parts.pug
     +testMixin
-    stylekit.
+    //- stylekit
       html{
         background-color: #000;
+      }
+      body{
+        &__test{
+          color: #fff;
+        }
       }
     

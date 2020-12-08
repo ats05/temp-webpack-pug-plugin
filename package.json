@@ -8,7 +8,10 @@
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {},
+  "dependencies": {
+    "pug-code-gen": "^3.0.1",
+    "sass": "^1.30.0"
+  },
   "devDependencies": {
     "html-webpack-plugin": "^4.5.0",
     "html-webpack-pug-plugin": "^2.0.0",

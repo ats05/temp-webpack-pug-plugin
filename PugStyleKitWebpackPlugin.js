@@ -5,6 +5,8 @@ const pug = require('pug');
 const fs = require('fs');
 const pugLexer = require('pug-lexer');
 const pugParser = require('pug-parser');
+const pugCodeGen = require('pug-code-gen');
+const sass = require('sass')
 
 
 const schema = {
@@ -14,14 +16,24 @@ const schema = {
       type: 'object',
       propaties: {
         from: { type: 'string' },
-        to: { type: 'string' },
+        to: {
+          anyOf: [
+            {
+              type: 'object',
+              propaties: {
+                html: { type: 'string' },
+                css: { type: 'string' },
+              },
+            },
+            { type: 'string' }
+          ]
+        },
       },
     }
   ]
 };
 
 const PLUGIN_NAME = 'PugStyleKitWebpackPlugin';
-
 class PugStyleKitWebpackPlugin {
 
   constructor(options = {}){
@@ -31,43 +43,60 @@ class PugStyleKitWebpackPlugin {
 
   apply(compiler) {
 
-
     compiler.hooks.compilation.tap(PLUGIN_NAME, compilation => {
-
       compilation.hooks.processAssets.tapPromise(PLUGIN_NAME, async () => {
 
-        const regexTarget = /stylekit\./g;
-        const regexReplace = '//-';
-
         const context = compilation.compiler.context;
-        let options = this.options;
         const outputPath = compilation.compiler.outputPath;
+        let options = this.options;
 
         if(!Array.isArray(options)) options = [options];
 
         options.forEach(config => {
-          const buffer = fs.readFileSync(config.from, 'utf8');
-          const filename = path.basename(config.from);
 
-          const tokens = pugLexer(buffer, {filename});
-          const ast = this._parseFile(config.from);
+          const inputFile = config.from;
+          const outputFile = (typeof config.to == 'string') ?
+            {html: config.to} : {html: config.to.html, css: config.to.css};
 
-          const targetNames = ['stylekit'];
-          const styleKitElements = this._findElementsByName(ast, targetNames);
-          console.log(styleKitElements);
-          // ここでタグをコメントに置き換える
+          const pugReadBuffer = fs.readFileSync(inputFile, 'utf8');
+          const filename = path.basename(inputFile);
 
+          const tokens = pugLexer(pugReadBuffer, {filename});
+          const ast = this._parseFile(inputFile);
 
+          const styleKitBlocks = this._findStyleKitComments(ast);
+          if(styleKitBlocks.length > 0) {
+
+            const resultSass = this._createScss(styleKitBlocks);
+            const distPath = path.relative(outputPath, outputFile.css);
+            compilation.emitAsset(distPath, new RawSource(resultSass.css.toString()));
+          }
+
+          // TODO Async
           const options = {
-            filename: config.from,
-            basedir: path.dirname(config.from)
+            filename: inputFile,
+            basedir: path.dirname(inputFile)
           };
-          const html = pug.render(buffer, options);
-
-          const distPath = path.relative(outputPath, config.to);
+          const html = pug.render(pugReadBuffer, options);
+          const distPath = path.relative(outputPath, outputFile.html);
           compilation.emitAsset(distPath, new RawSource(html));
         });
       });
+    });
+  }
+
+  _createScss(blocks) {
+    let sassBuffer = '';
+    blocks.forEach((element) => {
+      element.block.nodes.forEach((node) => {
+        sassBuffer += node.val;
+      });
+    });
+    // TODO Async
+    return sass.renderSync({
+      data: sassBuffer,
+      // includePaths: [],
+      outputStyle: "expanded", // or "compressed"
     });
   }
 
@@ -78,11 +107,11 @@ class PugStyleKitWebpackPlugin {
     return ast;
   }
 
-  _findElementsByName(currentNode, targetNames, list = new Set()){
+  _findStyleKitComments(currentNode, list = []){
     let nodes = [];
 
-    if(targetNames.includes(currentNode.name)) {
-      list.add(currentNode);
+    if(currentNode.type == 'BlockComment' && currentNode.val.trim() == 'stylekit') {
+      list.push(currentNode);
     }
 
     if('file' in currentNode) {
@@ -98,7 +127,7 @@ class PugStyleKitWebpackPlugin {
     }
 
     nodes.forEach(node => {
-      this._findElementsByName(node, targetNames, list);
+      this._findStyleKitComments(node, list);
     });
 
     return list;

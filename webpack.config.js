@@ -16,19 +16,29 @@ module.exports = {
     contentBase: OUTPUT_DIR,
     port: 8080
   },
-  module: {},
+  module: {
+    rules: [
+      {
+        test: /\.pug$/,
+        use: {
+          loader: 'pug-loader',
+        }
+      }
+    ]
+  },
   plugins: [
     new PugStyleKitWebpackPlugin(
-      [
-        {
-          from: SOURCE_DIR + '/index.pug',
-          to: OUTPUT_DIR + '/index.html',
-        },
-        {
-          from: SOURCE_DIR + '/parse-test.pug',
-          to: OUTPUT_DIR + '/parse-test.html',
-        }
-      ]
+      {
+        target: [
+          {
+            from: SOURCE_DIR + '/parse-test.pug',
+            to: {
+              html: OUTPUT_DIR + '/parse-test.html',
+              css: OUTPUT_DIR + '/style.css',
+            },
+          }
+        ],
+      }
     ),
   ]
 };
